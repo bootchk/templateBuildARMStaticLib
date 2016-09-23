@@ -1,11 +1,15 @@
-# Build archive for ARM
-
-# lkk notes
+# Build static library (archive) for ARM
 # 
 # Derived from Nordic example Makefiles
 #
 # This Makefile supports c++ but uses .c file suffix and does not support .cpp suffix
-
+# 
+# To use the product libfoo.a (to link it in):
+# arm-none-eabi-gcc -static main.c -L. -lfoo -o <executable_name>.out
+#
+# Basic intro at: http://www.adp-gmbh.ch/cpp/gcc/create_lib.html
+#
+# Doesn't make sense to make shared or dynamically linked library, no OS on bare metal
 
 
 
@@ -14,26 +18,13 @@ export OUTPUT_FILENAME
 MAKEFILE_NAME := $(MAKEFILE_LIST)
 MAKEFILE_DIR := $(dir $(MAKEFILE_NAME) ) 
 
-# lkk hack
-#HOME = /home/bootch
-
 # Doesn't require NRF SDK
-
-TEMPLATE_PATH = $(NRF_SDK_ROOT)/components/toolchain/gcc
 
 
 
 MK := mkdir
 RM := rm -rf
 
-VERBOSE = 1
-
-#echo suspend
-ifeq ("$(VERBOSE)","1")
-NO_ECHO := 
-else
-NO_ECHO := @
-endif
 
 # Symbols for Gnu ARM cross toolchain
 GNU_INSTALL_ROOT := /usr
@@ -43,8 +34,7 @@ GNU_PREFIX := arm-none-eabi
 #lkk was gcc
 CC              := '$(GNU_INSTALL_ROOT)/bin/$(GNU_PREFIX)-g++'
 AS              := '$(GNU_INSTALL_ROOT)/bin/$(GNU_PREFIX)-as'
-#lkk AR              := '$(GNU_INSTALL_ROOT)/bin/$(GNU_PREFIX)-ar' -r
-AR              := '$(GNU_INSTALL_ROOT)/bin/$(GNU_PREFIX)-ar' -rv
+AR              := '$(GNU_INSTALL_ROOT)/bin/$(GNU_PREFIX)-ar'
 LD              := '$(GNU_INSTALL_ROOT)/bin/$(GNU_PREFIX)-ld'
 NM              := '$(GNU_INSTALL_ROOT)/bin/$(GNU_PREFIX)-nm'
 OBJDUMP         := '$(GNU_INSTALL_ROOT)/bin/$(GNU_PREFIX)-objdump'
@@ -54,25 +44,23 @@ SIZE            := '$(GNU_INSTALL_ROOT)/bin/$(GNU_PREFIX)-size'
 #function for removing duplicates in a list
 remduplicates = $(strip $(if $1,$(firstword $1) $(call remduplicates,$(filter-out $(firstword $1),$1))))
 
-# No sources from NRF SDK
+
 
 C_SOURCE_FILES +=  foo.c
 
+# No sources from NRF SDK
 # No asm files
-
-
 # No  includes from NRF SDK
 
 
 
-OBJECT_DIRECTORY = _build
-LISTING_DIRECTORY = $(OBJECT_DIRECTORY)
-OUTPUT_BINARY_DIRECTORY = $(OBJECT_DIRECTORY)
+OBJECT_DIR = _build
+BUILD_DIR = $(OBJECT_DIR)
 
 # Sorting removes duplicates
-BUILD_DIRECTORIES := $(sort $(OBJECT_DIRECTORY) $(OUTPUT_BINARY_DIRECTORY) $(LISTING_DIRECTORY) )
+BUILD_DIRECTORIES := $(sort $(OBJECT_DIR) $(BUILD_DIR) $(LISTING_DIRECTORY) )
 
-#flags common to all targets
+
 
 # lkk no flags specific to Nordic
 
@@ -80,12 +68,12 @@ BUILD_DIRECTORIES := $(sort $(OBJECT_DIRECTORY) $(OUTPUT_BINARY_DIRECTORY) $(LIS
 CFLAGS += -mcpu=cortex-m4
 CFLAGS += -mthumb -mabi=aapcs 
 
-# lkk flags general to all targets
 # lkk not valid for g++: CFLAGS += --std=gnu11   original was gnu99
 # lkk excise -Werror
 # lkk add -fpermissive for compiling nrf C code that is non-strict
+#CFLAGS += -fpermissive 
 # lkk add -std=c++11 for support of nullptr
-CFLAGS += -fpermissive -std=c++11
+CFLAGS += -std=c++11
 
 CFLAGS += -Wall -O0 -g3
 CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
@@ -96,30 +84,14 @@ CFLAGS += -fno-builtin --short-enums
 CFLAGS += -DDEBUG
 #CFLAGS += -fshort-wchar
 
-#TODO no linker flags
-# keep every function in separate section. This will allow linker to dump unused functions
-LDFLAGS += -Xlinker -Map=$(LISTING_DIRECTORY)/$(OUTPUT_FILENAME).map
-LDFLAGS += -mthumb -mabi=aapcs 
-#LDFLAGS += -L $(TEMPLATE_PATH) 
-#LDFLAGS += -T$(LINKER_SCRIPT)
-LDFLAGS += -mcpu=cortex-m4
-LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
-# let linker to dump unused sections
-LDFLAGS += -Wl,--gc-sections
-# use newlib in nano version
-# LDFLAGS += --specs=nano.specs 
-LDFLAGS += -lc -lnosys
+# no linker flags
+# no assembler flags
 
-# lkk no assembler flags specific to target
-
-# tell archiver to expect object files in arm-elf format
-# Not arm-elf
+# tell archiver to expect object files in arm-elf format?
+# lkk I don't think this matters, and I don't know which to choose
+# 'arm-elf' is not supported by arm-none-eabi-ar
 #ARFLAGS += --target elf32-littlearm
-#ARFLAGS += --target arm-elf
-ARFLAGS += --target elf32-little
-
-
-
+#ARFLAGS += --target elf32-little
 
 
 
@@ -127,15 +99,18 @@ ARFLAGS += --target elf32-little
 # name used for single product, lacking suffix.
 # E.g. product will be file with name foo.ar
 PRODUCT_NAME = foo
-ARCHIVE_PRODUCT_FILENAME = $(PRODUCT_NAME).ar
-LIBRARY_PRODUCT_FILENAME = $(PRODUCT_NAME).a
+# By convention, name is of form lib<foo>.a
+ARCHIVE_PRODUCT_FILENAME = lib$(PRODUCT_NAME).a
+# target is in build dir
+ARCHIVE_TARGET = $(BUILD_DIR)/$(ARCHIVE_PRODUCT_FILENAME)
+
 
 #default target - first one defined
-default: clean $(OUTPUT_BINARY_DIRECTORY)/$(LIBRARY_PRODUCT_FILENAME)
+default: clean $(BUILD_DIR)/$(ARCHIVE_PRODUCT_FILENAME)
 
 all: clean
-	$(NO_ECHO)$(MAKE) -f $(MAKEFILE_NAME) -C $(MAKEFILE_DIR) -e cleanobj
-	$(NO_ECHO)$(MAKE) -f $(MAKEFILE_NAME) -C $(MAKEFILE_DIR) -e $(OUTPUT_BINARY_DIRECTORY)/$(PRODUCT_FILENAME)
+	$(MAKE) -f $(MAKEFILE_NAME) -C $(MAKEFILE_DIR) -e cleanobj
+	$(MAKE) -f $(MAKEFILE_NAME) -C $(MAKEFILE_DIR) -e $(BUILD_DIR)/$(PRODUCT_FILENAME)
 
 
 help:
@@ -144,41 +119,35 @@ help:
 
 C_SOURCE_FILE_NAMES = $(notdir $(C_SOURCE_FILES))
 C_PATHS = $(call remduplicates, $(dir $(C_SOURCE_FILES) ) )
-C_OBJECTS = $(addprefix $(OBJECT_DIRECTORY)/, $(C_SOURCE_FILE_NAMES:.c=.o) )
+C_OBJECTS = $(addprefix $(OBJECT_DIR)/, $(C_SOURCE_FILE_NAMES:.c=.o) )
 
 
 vpath %.c $(C_PATHS)
 
 OBJECTS = $(C_OBJECTS)
 
-#lkk no linker script
-#test: LINKER_SCRIPT=gcc_nrf52.ld
 
 
 ## Create build directories
 $(BUILD_DIRECTORIES):
-	echo $(MAKEFILE_NAME)
+	@echo $(MAKEFILE_NAME)
 	$(MK) $@
 
 # Create objects from C SRC files
-$(OBJECT_DIRECTORY)/%.o: %.c
-	@echo Compiling file: $(notdir $<)
-	$(NO_ECHO)$(CC) $(CFLAGS) $(INC_PATHS) -c -o $@ $<
+$(OBJECT_DIR)/%.o: %.c
+	@echo Compiling: $(notdir $<)
+	$(CC) $(CFLAGS) $(INC_PATHS) -c -o $@ $<
 	
 # Archive
 #lkk ARFLAGS must follow objects
-$(OUTPUT_BINARY_DIRECTORY)/$(PRODUCT_FILENAME): $(BUILD_DIRECTORIES) $(OBJECTS)
-	@echo Archiving : $(OUTPUT_FILENAME).ar
-	$(NO_ECHO)$(AR) $(OBJECTS) $(ARFLAGS) -o $(OUTPUT_BINARY_DIRECTORY)/$(PRODUCT_FILENAME)
+# symbol for member is $%
+# Note this really replaces things in the archive, but clean deleted it
+# Somehow 'rv' is added to this command???
+$(ARCHIVE_TARGET): $(BUILD_DIRECTORIES) $(OBJECTS)
+	@echo Archiving : $@ 
+	@echo Objects: $(OBJECTS)
+	$(AR) $(ARFLAGS) $(ARCHIVE_TARGET) $(OBJECTS) 
 	
-# Link
-#lkk CC calls LD
-$(OUTPUT_BINARY_DIRECTORY)/$(LIBRARY_PRODUCT_FILENAME): $(BUILD_DIRECTORIES) $(OBJECTS)
-	@echo Linking target: 
-	$(NO_ECHO)$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -lm -o $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).a
-
-
-
 
 clean:
 	$(RM) $(BUILD_DIRECTORIES)

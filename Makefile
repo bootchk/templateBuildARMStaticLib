@@ -106,11 +106,11 @@ ARCHIVE_TARGET = $(BUILD_DIR)/$(ARCHIVE_PRODUCT_FILENAME)
 
 
 #default target - first one defined
-default: clean $(BUILD_DIR)/$(ARCHIVE_PRODUCT_FILENAME)
+default: clean $(ARCHIVE_TARGET)
 
-all: clean
+all: clean $(ARCHIVE_TARGET)
 	$(MAKE) -f $(MAKEFILE_NAME) -C $(MAKEFILE_DIR) -e cleanobj
-	$(MAKE) -f $(MAKEFILE_NAME) -C $(MAKEFILE_DIR) -e $(BUILD_DIR)/$(PRODUCT_FILENAME)
+	$(MAKE) -f $(MAKEFILE_NAME) -C $(MAKEFILE_DIR) -e $(ARCHIVE_TARGET)
 
 
 help:

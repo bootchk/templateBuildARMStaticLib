@@ -1,16 +1,16 @@
 # Build static library (archive) for ARM
 # 
 # Derived from Nordic example Makefiles.
-# So this is specific to ARM Cortex M4
+# So this is specific to ARM Cortex M4 (see below: cortex-m4)
 #
 # This Makefile supports c++ but uses .c file suffix and does not support .cpp suffix
 # 
 # To use the product libfoo.a (to link it in):
-# arm-none-eabi-gcc -static main.c -L. -lfoo -o <executable_name>.out
+# !!! Note libfoo must come after any object files that use it.
+# ??? is -static required?
+# arm-none-eabi-gcc -static main.c -L . -lfoo -o <executable_name>.out
 #
-# Basic intro at: http://www.adp-gmbh.ch/cpp/gcc/create_lib.html
-#
-# Doesn't make sense to make shared or dynamically linked library, no OS on bare metal
+# Doesn't make sense to build shared or dynamically linked library: no OS on bare metal
 
 
 
@@ -91,7 +91,7 @@ CFLAGS += -DDEBUG
 # tell archiver to expect object files in arm-elf format?
 # lkk I don't think this matters, and I don't know which to choose
 # 'arm-elf' is not supported by arm-none-eabi-ar
-#ARFLAGS += --target elf32-littlearm
+ARFLAGS += --target elf32-littlearm
 #ARFLAGS += --target elf32-little
 
 

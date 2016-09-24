@@ -1,4 +1,6 @@
-Work in progress
+
+About
+-
 
 Template project to build a library
 - static (use ar)
@@ -10,9 +12,27 @@ Template project to build a library
 
 Its a template: the project is mostly empty of SW content, it just demonstrates the build process.
 
-In other words, I have one project that is very specific to a target  (nordic chip family nrf52) that has ARM mcu but also has other peripherals, and its own proprietary SDK.  The SDK doesn't provide an OS, but provides libraries for using the peripherals, etc.  This project has a convoluted hand-coded Makefile, mostly written by others.
+The audience is people who want to understand cross building libraries (for targets not the same as the host.)  Some compiler flags are relevant only if you are using ARM M4.  No compiler flags are specific to the exact target: nrf52 family chip.
 
-I have another project which is target independent, calling an OSAL (OS abstraction layer) that abstracts away the specific peripherals of the target.  Currently the project is an Eclipse project that automatically generates makefiles.
+In other words, I have project A that is very specific to a target.  
+The target:
+- is chip family nrf52) made by Nordic Semicondutor Inc.
+- has ARM mcu but also has other peripherals
+- has its own proprietary SDK.  The SDK doesn't provide an OS, but provides libraries for using the peripherals, etc.  
+Project A has a convoluted hand-coded Makefile, mostly written by others.
 
-I want to keep the projects separate, but link the second project into the first project.  So I build a static library (an archive of object files) to link into the second project.
+I have another project B:
+- target independent
+- calls an OSAL (OS abstraction layer) that abstracts away the specific peripherals of the target.  
+- is an Eclipse project that automatically generates makefiles.
+
+I want to keep the projects separate, but link the project B into project A.  So I build project A as a static library (an archive of object files) to link into project B.
+
+See Also
+-
+
+Basic intro at: http://www.adp-gmbh.ch/cpp/gcc/create_lib.html
+
+Discussion of library ordering problem: http://eli.thegreenplace.net/2013/07/09/library-order-in-static-linking
+
 

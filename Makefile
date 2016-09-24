@@ -1,6 +1,7 @@
 # Build static library (archive) for ARM
 # 
-# Derived from Nordic example Makefiles
+# Derived from Nordic example Makefiles.
+# So this is specific to ARM Cortex M4
 #
 # This Makefile supports c++ but uses .c file suffix and does not support .cpp suffix
 # 
@@ -45,7 +46,7 @@ SIZE            := '$(GNU_INSTALL_ROOT)/bin/$(GNU_PREFIX)-size'
 remduplicates = $(strip $(if $1,$(firstword $1) $(call remduplicates,$(filter-out $(firstword $1),$1))))
 
 
-
+# source files of the library
 C_SOURCE_FILES +=  foo.c
 
 # No sources from NRF SDK
@@ -106,9 +107,9 @@ ARCHIVE_TARGET = $(BUILD_DIR)/$(ARCHIVE_PRODUCT_FILENAME)
 
 
 #default target - first one defined
-default: clean $(ARCHIVE_TARGET)
+default: clean $(ARCHIVE_TARGET) test
 
-all: clean $(ARCHIVE_TARGET)
+all: clean $(ARCHIVE_TARGET) test
 	$(MAKE) -f $(MAKEFILE_NAME) -C $(MAKEFILE_DIR) -e cleanobj
 	$(MAKE) -f $(MAKEFILE_NAME) -C $(MAKEFILE_DIR) -e $(ARCHIVE_TARGET)
 
@@ -126,6 +127,14 @@ vpath %.c $(C_PATHS)
 
 OBJECTS = $(C_OBJECTS)
 
+# compile a test prog that calls library
+# Note on link:
+# - using CC to link
+# - uses same CFLAGS (for ARM) that were used for the static library
+# - --specs=nosys.specs means: cross linking to target with no OS, don't use _exit, etc.
+test: $(ARCHIVE_TARGET) main.c
+	$(CC) $(CFLAGS) -c main.c -o $(BUILD_DIR)/main.o
+	$(CC) $(CFLAGS) $(BUILD_DIR)/main.o -L_build -lfoo --specs=nosys.specs -o $(BUILD_DIR)/main.out
 
 
 ## Create build directories

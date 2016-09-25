@@ -66,8 +66,13 @@ BUILD_DIRECTORIES := $(sort $(OBJECT_DIR) $(BUILD_DIR) $(LISTING_DIRECTORY) )
 # lkk no flags specific to Nordic
 
 # lkk flags for ARM ISA in Nordic nrf52 target
+# ARM ISA is M4 (the included FPU in the MP4 is described later.)
 CFLAGS += -mcpu=cortex-m4
-CFLAGS += -mthumb -mabi=aapcs 
+# lkk superfluous, deprecated.  By default, gcc generates newer Thumb2
+CFLAGS += -mthumb
+CFLAGS += -mabi=aapcs
+# chip has a hw FPU
+CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 
 # lkk not valid for g++: CFLAGS += --std=gnu11   original was gnu99
 # lkk excise -Werror
@@ -77,10 +82,15 @@ CFLAGS += -mthumb -mabi=aapcs
 CFLAGS += -std=c++11
 
 CFLAGS += -Wall -O0 -g3
-CFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+
+# lkk compiler flags that enable optimizations by linker
 # keep every function in separate section. This will allow linker to dump unused functions
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
-CFLAGS += -fno-builtin --short-enums 
+# lkk Don't use functions built-into gcc
+CFLAGS += -fno-builtin 
+# lkk This is probably dangerous, but might be necessary if you use Nordic structs
+CFLAGS += --short-enums
+
 #lkk
 CFLAGS += -DDEBUG
 #CFLAGS += -fshort-wchar

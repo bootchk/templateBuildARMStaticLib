@@ -68,7 +68,9 @@ BUILD_DIRECTORIES := $(sort $(OBJECT_DIR) $(BUILD_DIR) $(LISTING_DIRECTORY) )
 # lkk flags for ARM ISA in Nordic nrf52 target
 # ARM ISA is M4 (the included FPU in the MP4 is described later.)
 CFLAGS += -mcpu=cortex-m4
-# lkk superfluous, deprecated.  By default, gcc generates newer Thumb2
+# lkk ??? This is not described in gcc documentation.
+# Other sources suggest it is superfluous, deprecated.  By default, gcc generates newer Thumb2
+# But if you omit, gcc says "target CPU does not support ARM mode"
 CFLAGS += -mthumb
 CFLAGS += -mabi=aapcs
 # chip has a hw FPU

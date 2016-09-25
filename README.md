@@ -62,6 +62,14 @@ Then change the project to:
 
 A) Choose Project Properties>C/C++ Build>Settings>Build Artifact>Artifact Type =>  Static Library
 B) Choose Project Properties>C/C++ Build>Settings>Build Tools>GCC C++ Compiler>Command => arm-none-eabi-gcc
-C) Choose Project Properties>C/C++ Build>Settings>Build Tools>GCC C++ Compiler>All options => <insert compiler flags for ARM>
+C) Choose Project Properties>C/C++ Build>Settings>Build Tools>GCC C++ Compiler>Miscellaneous>Other flags => <insert compiler flags for target ARM>
+
+Compiler flags for target ARM (M4F: M4 w/ optional FPU) 
+-mcpu=cortex-m4
+-mthumb
+-mabi=aapcs
+-mfloat-abi=hard 
+-mfpu=fpv4-sp-d16
+
 
 I haven't fully tested the above yet.
